@@ -18,7 +18,7 @@ clean:
 		$(server_objects) \
 		$(common_objects)
 
-debug: CFLAGS  += -g -O0 -DDEBUG
+debug: CFLAGS  += -ggdb -O0 -DDEBUG
 debug: LDFLAGS +=
 debug: version := $(version)+debug
 debug: all
