@@ -8,36 +8,37 @@
 
 #include "util.h"
 
-enum color {
-    COLOR_BG,
-    COLOR_BOARD,
-    COLOR_FG,
-    COLOR_FRUIT,
-    COLOR_OPONENT,
-    COLOR_PLAYER,
-    COLOR_SCOREBOARD,
-    COLOR_END
-};
-
-enum entity_type {
+enum {
     FRUIT,
-    OPONENT,
+    OPPONENT,
     PLAYER,
-    ENTITY_TYPE_END
+    ENTITY_TYPE_END,
+
+    BG,
+    BOARD,
+    FG,
+    SCOREBOARD,
+    COLOR_END
 };
 
 enum direction {
     UP, RIGHT, DOWN, LEFT
 };
 
-typedef struct entity {
-    enum entity_type type;
-    int x, y;
-    struct entity *next;
-} Entity;
+typedef struct entity Entity;
+typedef struct front_end FrontEnd;
+typedef struct game Game;
+typedef struct keybinding Keybinding;
+typedef union arg Arg;
 
-typedef struct {
+struct entity {
+    int x, y;
+    Entity *next;
+};
+
+struct front_end {
     Color colors[COLOR_END];
+    Entity *fruits, *opponents, *player;
     Rectangle board;
     int board_column_tiles,
         board_row_tiles,
@@ -46,23 +47,20 @@ typedef struct {
         height,
         tile_width,
         tile_height;
-} FrontEnd;
+};
 
-typedef union {
+union arg {
     KeyboardKey key;
     enum direction dir;
-} Arg;
+};
 
-typedef struct game Game;
-
-typedef struct {
+struct keybinding {
     Arg arg;
-    void (*func)(Game *game, const Arg *);
+    void (*func)(void *context, const Arg *);
     KeyboardKey keys[5];
-} Keybinding;
+};
 
 struct game {
-    Entity *entities, *player;
     FrontEnd canvas;
     Keybinding keybindings[4];
 };
@@ -96,75 +94,97 @@ static void
 draw_scoreboard(FrontEnd *canvas) {
     DrawText("Top 10 players", canvas->board.x + canvas->board.width +
             canvas->margin, canvas->margin, 10,
-            canvas->colors[COLOR_FG]);
+            canvas->colors[FG]);
     DrawText("Points", canvas->width - canvas->margin -
             MeasureText("Points", 10), canvas->margin, 10,
-            canvas->colors[COLOR_FG]);
+            canvas->colors[FG]);
 }
 
 static void
-draw_entities(FrontEnd *canvas, Entity *entities) {
-    Color c;
-    Entity *entity;
-    for (entity = entities; entity; entity = entity->next) {
-        switch (entity->type) {
-        case FRUIT:
-            c = canvas->colors[COLOR_FRUIT];
-            break;
-        case OPONENT:
-            c = canvas->colors[COLOR_OPONENT];
-            break;
-        case PLAYER:
-            c = canvas->colors[COLOR_PLAYER];
-            break;
-        default:
-            fprintf(stderr, "draw_entities: Invalid entity (%d)\n",
-                    entity->type);
-            return;
-        }
-        DrawRectangle(entity->x * canvas->tile_width +
-                canvas->board.x,
-                entity->y * canvas->tile_height + canvas->board.y,
-                canvas->tile_width,
-                canvas->tile_height,
-                c);
+draw_entity(FrontEnd *canvas, Entity *e, Color color) {
+    DrawRectangle(e->x * canvas->tile_width +
+            canvas->board.x,
+            e->y * canvas->tile_height + canvas->board.y,
+            canvas->tile_width,
+            canvas->tile_height,
+            color);
+}
+
+static void
+draw_entities(FrontEnd *canvas) {
+    Entity *e;
+    for (e = canvas->opponents; e; e = e->next)
+        draw_entity(canvas, e, canvas->colors[OPPONENT]);
+    for (e = canvas->fruits; e; e = e->next)
+        draw_entity(canvas, e, canvas->colors[FRUIT]);
+    if ((e = canvas->player))
+        draw_entity(canvas, e, canvas->colors[PLAYER]);
+}
+
+static void
+add_entity(Entity **entities, int x, int y) {
+    Entity *e, *aux;
+    e = calloc(1, sizeof (Entity));
+    e->x = x;
+    e->y = y;
+    aux = *entities;
+    *entities = e;
+    e->next = aux;
+}
+
+static void
+destroy_entities(Entity **entities) {
+    Entity *e, *aux;
+    for (e = *entities; e; e = aux) {
+        aux = e->next;
+        free(e);
     }
 }
 
 static void
-move_player(Game *game, const Arg *arg) {
+move_player(void *context, const Arg *arg) {
+    Entity *player;
+    FrontEnd *canvas = context;
     enum direction dir = arg->dir;
-    Entity *player = game->player;
+    if (!(player = canvas->player)) {
+        fprintf(stderr, "ERR: move_player: Player does not exist\n");
+        return;
+    }
     switch (dir) {
     case UP:
-        player->y--;
+        if (player->y > 0)
+            player->y--;
         break;
     case RIGHT:
-        player->x++;
+        if (player->x < canvas->board_row_tiles-1)
+            player->x++;
         break;
     case DOWN:
-        player->y++;
+        if (player->y < canvas->board_column_tiles-1)
+            player->y++;
         break;
     case LEFT:
-        player->x--;
+        if (player->x > 0)
+            player->x--;
         break;
     default:
-        fprintf(stderr, "move_player: Invalid direction (%d)\n", dir);
+        fprintf(stderr, "ERR: move_player: Invalid direction (%d)\n",
+                dir);
     }
 }
 
 static void
 handle_keyboard_input(Game *game) {
+    Keybinding *k = game->keybindings;
     for (size_t i = 0; i < LENGTH(game->keybindings); i++) {
         bool keys_matched = false;
-        for (size_t j = 0; game->keybindings[i].keys[j] != KEY_NULL; j++)
-            if (IsKeyPressed(game->keybindings[i].keys[j]))
+        for (size_t j = 0; k[i].keys[j] != KEY_NULL; j++)
+            if (IsKeyPressed(k[i].keys[j]))
                 keys_matched = true;
         if (keys_matched)
-            game->keybindings[i].func(game, &game->keybindings[i].arg);
+            k[i].func(game, &k[i].arg);
     }
 }
-
 
 int
 main(void) {
@@ -176,8 +196,10 @@ main(void) {
           _board_width  = _height - _margin*2,
           _board_height = _height - _margin*2;
     Game game = {
-        .entities = calloc(1, sizeof (Entity)),
         .canvas = {
+            .fruits = NULL,
+            .opponents = NULL,
+            .player = NULL,
             .board_column_tiles = _board_column_tiles,
             .board_row_tiles    = _board_row_tiles,
             .margin             = _margin,
@@ -192,27 +214,39 @@ main(void) {
                 .height = _board_height
             },
             .colors = {
-                [COLOR_BG]         = rgba_int_to_color(0xeeeeeeff),
-                [COLOR_BOARD]      = rgba_int_to_color(0xffffffff),
-                [COLOR_FG]         = rgba_int_to_color(0x000000ff),
-                [COLOR_FRUIT]      = rgba_int_to_color(0x08a331ff),
-                [COLOR_OPONENT]    = rgba_int_to_color(0x00000019),
-                [COLOR_PLAYER]     = rgba_int_to_color(0xbdaa27ff),
-                [COLOR_SCOREBOARD] = rgba_int_to_color(0xeeeeeeff)
+                [FRUIT]      = rgba_int_to_color(0x08a331ff),
+                [OPPONENT]    = rgba_int_to_color(0x00000021),
+                [PLAYER]     = rgba_int_to_color(0xbdaa27ff),
+                [BG]         = rgba_int_to_color(0xeeeeeeff),
+                [BOARD]      = rgba_int_to_color(0xffffffff),
+                [FG]         = rgba_int_to_color(0x000000ff),
+                [SCOREBOARD] = rgba_int_to_color(0xeeeeeeff)
             }
         },
         .keybindings = {
-            {.keys = {KEY_UP,    KEY_NULL}, .func = move_player, .arg = {.dir = UP}},
-            {.keys = {KEY_RIGHT, KEY_NULL}, .func = move_player, .arg = {.dir = RIGHT}},
-            {.keys = {KEY_DOWN,  KEY_NULL}, .func = move_player, .arg = {.dir = DOWN}},
-            {.keys = {KEY_LEFT,  KEY_NULL}, .func = move_player, .arg = {.dir = LEFT}},
+            {
+                .keys = {KEY_UP, KEY_NULL},
+                .func = move_player, .arg = {.dir = UP}
+            },
+            {
+                .keys = {KEY_RIGHT, KEY_NULL},
+                .func = move_player, .arg = {.dir = RIGHT}
+            },
+            {
+                .keys = {KEY_DOWN, KEY_NULL},
+                .func = move_player, .arg = {.dir = DOWN}
+            },
+            {
+                .keys = {KEY_LEFT, KEY_NULL},
+                .func = move_player, .arg = {.dir = LEFT}
+            },
         }
     };
 
-    game.entities->x = 1;
-    game.entities->y = 1;
-    game.entities->type = PLAYER;
-    game.player = game.entities;
+    add_entity(&game.canvas.player, 5, 5);
+    add_entity(&game.canvas.opponents, 1, 1);
+    add_entity(&game.canvas.opponents, 9, 9);
+    add_entity(&game.canvas.fruits, 3, 1);
 
     SetTraceLogLevel(LOG_WARNING);
     InitWindow(game.canvas.width, game.canvas.height,
@@ -220,18 +254,21 @@ main(void) {
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
+        handle_keyboard_input(&game);
+
         BeginDrawing();
-        ClearBackground(game.canvas.colors[COLOR_BG]);
+        ClearBackground(game.canvas.colors[BG]);
         draw_board_shadow(game.canvas.board);
         draw_scoreboard(&game.canvas);
         DrawRectangleRec(game.canvas.board,
-                game.canvas.colors[COLOR_BOARD]);
-        draw_entities(&game.canvas, game.entities);
-        handle_keyboard_input(&game);
+                game.canvas.colors[BOARD]);
+        draw_entities(&game.canvas);
         EndDrawing();
     }
 
     CloseWindow();
-    free(game.entities);
+    destroy_entities(&game.canvas.fruits);
+    destroy_entities(&game.canvas.opponents);
+    destroy_entities(&game.canvas.player);
     return 0;
 }
