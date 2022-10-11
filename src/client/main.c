@@ -9,7 +9,7 @@
 void
 print_foo(Command cmd) {
     UNUSED(cmd);
-    printf("WORKING!!! id=%d type=%d data=%s\n", cmd.id, cmd.type, (char *) cmd.data);
+    LOG_DEBUG("WORKING!!! id=%d type=%d data=%s", cmd.id, cmd.type, (char *) cmd.data);
 }
 
 int
