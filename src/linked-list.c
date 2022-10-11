@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #define LL_SHORTEN_NAMES
+
 #include "linked-list.h"
 
 void
