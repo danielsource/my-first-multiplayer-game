@@ -15,7 +15,7 @@ struct keyboard_listener {
     key_pressed_once_getter _getter;
     void (*listen_keys_pressed_once)(KeyboardListener *self, size_t max_keys);
     void (*register_player_id)(KeyboardListener *self, uint32_t id);
-    void (*subscribe)(KeyboardListener *self, cmd_func observer);
+    void (*subscribe)(KeyboardListener *self, CommandFunction *observer);
 };
 
 KeyboardListener *create_keyboard_listener(key_pressed_once_getter getter);

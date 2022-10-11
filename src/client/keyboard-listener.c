@@ -11,18 +11,11 @@
 static void
 notify_all(List *observers, Command cmd) {
     List *observer;
+    CommandFunction *wrapper;
     cmd_func notify;
     for (observer = observers; observer; observer = observer->next) {
-        /* This memcpy does the same as `notify = observer->data;`.
-         *
-         * GCC shows this warning when the assignment is made:
-         *
-         *     warning: ISO C forbids assignment between function
-         *     pointer and ‘void *’ [-Wpedantic]
-         *
-         *     notify = observer->data;
-         */
-        memcpy(&notify, &observer->data, sizeof (cmd_func));
+        wrapper = observer->data;
+        notify = wrapper->func;
         notify(cmd);
     }
 }
@@ -41,6 +34,7 @@ listen_keys_pressed_once(KeyboardListener *kl, size_t max_keys) {
             break;
         buf[i] = key;
     }
+    /* if (buf[0]) */
     notify_all(kl->_observers, cmd);
     free(buf);
 }
@@ -51,8 +45,8 @@ register_player_id(KeyboardListener *kl, uint32_t id) {
 }
 
 static void
-subscribe(KeyboardListener *kl, cmd_func observer) {
-    insert(&kl->_observers, &observer);
+subscribe(KeyboardListener *kl, CommandFunction *observer) {
+    insert(&kl->_observers, observer);
 }
 
 KeyboardListener *

@@ -15,8 +15,9 @@ print_foo(Command cmd) {
 int
 main(void) {
     KeyboardListener *kl = create_keyboard_listener(GetKeyPressed);
+    CommandFunction func = {print_foo};
     kl->register_player_id(kl, 16);
-    kl->subscribe(kl, print_foo);
+    kl->subscribe(kl, &func);
     kl->listen_keys_pressed_once(kl, 10);
     delete_keyboard_listener(kl);
     return 0;

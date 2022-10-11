@@ -14,6 +14,10 @@ typedef struct {
 
 typedef void (*cmd_func)(Command cmd);
 
+typedef struct {
+    cmd_func func;
+} CommandFunction;
+
 #endif
 
 /* vim: set et sw=4 ts=4 tw=72: */
