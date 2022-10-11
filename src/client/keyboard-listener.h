@@ -3,23 +3,23 @@
 
 #include <stdint.h>
 
-#include "command.h"
 #include "linked-list.h"
+#include "observer.h"
 
 typedef struct keyboard_listener KeyboardListener;
 typedef int (*key_pressed_once_getter)(void);
 
 struct keyboard_listener {
-    ll_List *_observers;
+    ll_List *observers;
     uint32_t _player_id;
     key_pressed_once_getter _getter;
-    void (*listen_keys_pressed_once)(KeyboardListener *self, size_t max_keys);
-    void (*register_player_id)(KeyboardListener *self, uint32_t id);
-    void (*subscribe)(KeyboardListener *self, CommandFunction *observer);
 };
 
-KeyboardListener *create_keyboard_listener(key_pressed_once_getter getter);
-void delete_keyboard_listener(KeyboardListener *kl);
+KeyboardListener *create_keyboard_listener(
+        key_pressed_once_getter getter);
+void destroy_keyboard_listener(KeyboardListener *kl);
+void listen_keys_pressed_once(KeyboardListener *kl, size_t max_keys);
+void register_player_id(KeyboardListener *kl, uint32_t id);
 
 #endif
 
