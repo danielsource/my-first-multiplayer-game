@@ -7,9 +7,9 @@
 #include "linked-list.h"
 
 void
-clear(List **l, bool free_data) {
+clear(List *l, bool free_data) {
     List *node, *aux;
-    for (node = *l; node; node = aux) {
+    for (node = l; node; node = aux) {
         aux = node->next;
         if (free_data)
             free(node->data);
@@ -30,7 +30,6 @@ insert(List **l, void *data) {
     aux = (*l)->next;
     *l = node;
     node->next = aux;
-
 }
 
 size_t

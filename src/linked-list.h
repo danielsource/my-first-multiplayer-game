@@ -28,6 +28,7 @@ void ll_remove(ll_List **l, void *data,
 
 #ifdef LL_SHORTEN_NAMES
 #define List   ll_List
+#define clear  ll_clear
 #define insert ll_insert
 #define length ll_length
 #define print  ll_print

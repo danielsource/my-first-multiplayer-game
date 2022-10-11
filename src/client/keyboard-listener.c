@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -62,6 +63,12 @@ create_keyboard_listener(key_pressed_once_getter getter) {
     kl->register_player_id = register_player_id;
     kl->subscribe = subscribe;
     return kl;
+}
+
+void
+delete_keyboard_listener(KeyboardListener *kl) {
+    clear(kl->_observers, false);
+    free(kl);
 }
 
 /* vim: set et sw=4 ts=4 tw=72: */
