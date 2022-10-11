@@ -9,7 +9,7 @@
 void
 print_foo(Command cmd) {
     UNUSED(cmd);
-    puts("WORKING!!!");
+    printf("WORKING!!! id=%d type=%d data=%s\n", cmd.id, cmd.type, (char *) cmd.data);
 }
 
 int
