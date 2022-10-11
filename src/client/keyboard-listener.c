@@ -23,7 +23,7 @@ listen_keys_pressed_once(KeyboardListener *kl, size_t max_keys) {
     size_t i;
     Command cmd = {
         .id = kl->_player_id,
-        .type = CMD_KEYS_PRESSED,
+        .type = CMD_KEY_PRESS,
         .data = buf
     };
     for (i = 0; i < max_keys; i++) {
@@ -32,7 +32,7 @@ listen_keys_pressed_once(KeyboardListener *kl, size_t max_keys) {
         buf[i] = key;
     }
     if (buf[0])
-        notify_all_observers(kl->observers, cmd);
+        notify_all_observers(kl->observers, &cmd);
     free(buf);
 }
 

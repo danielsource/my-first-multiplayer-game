@@ -6,7 +6,8 @@
 #include "linked-list.h"
 
 typedef enum {
-    CMD_KEYS_PRESSED
+    CMD_ADD_FRUIT,
+    CMD_KEY_PRESS
 } CommandType;
 
 typedef struct {
@@ -15,11 +16,11 @@ typedef struct {
 } Command;
 
 typedef struct {
-    void (*func)(Command cmd);
+    void (*func)(Command *cmd);
 } Observer;
 
 void clear_observers(ll_List *observers);
-void notify_all_observers(ll_List *observers, Command cmd);
+void notify_all_observers(ll_List *observers, Command *cmd);
 void subscribe_observer(ll_List **observers, Observer *func);
 
 #endif

@@ -9,7 +9,7 @@ clear_observers(List *observers) {
 }
 
 void
-notify_all_observers(List *observers, Command cmd) {
+notify_all_observers(List *observers, Command *cmd) {
     List *o;
     Observer *observer;
     for (o = observers; o; o = o->next) {

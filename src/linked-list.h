@@ -4,11 +4,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct ll_list ll_List;
+typedef struct ll_node ll_List;
 
-struct ll_list {
+struct ll_node {
     void *data;
-    ll_List *next;
+    struct ll_node *next;
 };
 
 void ll_clear(ll_List *l, bool free_data); /* Removes all items from the

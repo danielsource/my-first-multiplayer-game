@@ -4,14 +4,14 @@
 
 #include "timer.h"
 
-double
-get_elapsed(Timer *t) {
-    return GetTime() - t->start;
-}
-
 bool
 is_timer_done(Timer *t) {
     return (GetTime() - t->start) >= t->lifetime;
+}
+
+double
+get_elapsed(Timer *t) {
+    return GetTime() - t->start;
 }
 
 void start_timer(Timer *t, double lifetime) {

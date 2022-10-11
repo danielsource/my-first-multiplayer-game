@@ -6,14 +6,13 @@
 #include "linked-list.h"
 #include "observer.h"
 
-typedef struct keyboard_listener KeyboardListener;
 typedef int (*key_pressed_once_getter)(void);
 
-struct keyboard_listener {
+typedef struct {
     ll_List *observers;
     uint32_t _player_id;
     key_pressed_once_getter _getter;
-};
+} KeyboardListener;
 
 KeyboardListener *create_keyboard_listener(
         key_pressed_once_getter getter);
