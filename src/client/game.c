@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #define LL_SHORTEN_NAMES
@@ -14,29 +15,45 @@
 #include "util.h" /* TEMP */
 
 static void
-move_up(GameState *state, Player *player) {
+move_up(GameState *state, Player *p) {
     UNUSED(state);
-    if (player->y > 0)
-        player->y = player->y - 1;
+    if (p->y > 0)
+        p->y = p->y - 1;
 }
 
 static void
-move_right(GameState *state, Player *player) {
-    if (player->x < state->board.width - 1)
-        player->x = player->x + 1;
+move_right(GameState *state, Player *p) {
+    if (p->x < state->board.width - 1)
+        p->x = p->x + 1;
 }
 
 static void
-move_down(GameState *state, Player *player) {
-    if (player->y < state->board.height - 1)
-        player->y = player->y + 1;
+move_down(GameState *state, Player *p) {
+    if (p->y < state->board.height - 1)
+        p->y = p->y + 1;
 }
 
 static void
-move_left(GameState *state, Player *player) {
+move_left(GameState *state, Player *p) {
     UNUSED(state);
-    if (player->x > 0)
-        player->x = player->x - 1;
+    if (p->x > 0)
+        p->x = p->x - 1;
+}
+
+static void
+check_fruit_collision(Game *g, Player *p) {
+    Fruit *f;
+    List *node;
+    Event ev = {0};
+    for (node = g->state.fruits; node; node = node->next) {
+        f = node->data;
+        if (p->x == f->x && p->y == f->y) {
+            LOG_DEBUG("check_fruit_collision: Collision between"
+                    " p=%d and f=%d", p->id, f->id);
+            ev.id = f->id;
+            game_del_fruit(g, &ev);
+        }
+    }
 }
 
 Game *
@@ -51,12 +68,13 @@ game_add_fruit(Game *g, Event *ev) {
     Event _ev;
     Fruit *f = calloc(1, sizeof (Fruit));
     if (ev) {
-        f = ev->data;
+        memcpy(f, ev->data, sizeof (Fruit));
     } else {
         f->id = rand();
         f->x = rand() % g->state.board.width;
         f->y = rand() % g->state.board.height;
     }
+    _ev.id = f->id;
     _ev.type = ADD_FRUIT;
     _ev.data = f;
     obs_notify_all(g->observers, &_ev);
@@ -65,26 +83,44 @@ game_add_fruit(Game *g, Event *ev) {
 
 void
 game_add_player(Game *g, Event *ev) {
-    UNUSED(g);
-    UNUSED(ev);
-}
-
-void
-game_check_fruit_collision(Game *g, Player *player) {
-    UNUSED(g);
-    UNUSED(player);
+    Event _ev;
+    Player *p = calloc(1, sizeof (Player));
+    if (!ev) {
+        LOG_DEBUG("game_add_player: No event (ev=%p)", (void *) ev);
+        return;
+    }
+    memcpy(p, ev->data, sizeof (Player));
+    if (p->x < 0)
+        p->x = rand() % g->state.board.width;
+    if (p->y < 0)
+        p->y = rand() % g->state.board.height;
+    _ev.id = p->id;
+    _ev.type = ADD_PLAYER;
+    _ev.data = p;
+    obs_notify_all(g->observers, &_ev);
+    insert(&g->state.players, p);
 }
 
 void
 game_del_fruit(Game *g, Event *ev) {
-    UNUSED(g);
-    UNUSED(ev);
+    Event _ev = {
+        .id = ev->id,
+        .type = DEL_FRUIT,
+        .data = NULL
+    };
+    remove(&g->state.fruits, ev->data, true);
+    obs_notify_all(g->observers, &_ev);
 }
 
 void
 game_del_player(Game *g, Event *ev) {
-    UNUSED(g);
-    UNUSED(ev);
+    Event _ev = {
+        .id = ev->id,
+        .type = DEL_PLAYER,
+        .data = NULL
+    };
+    remove(&g->state.players, ev->data, true);
+    obs_notify_all(g->observers, &_ev);
 }
 
 void
@@ -92,10 +128,10 @@ game_move_player(Game *g, Event *ev) {
     UNUSED(g);
     UNUSED(ev);
     List *node = NULL;
-    Player *player;
+    Player *p;
     for (node = g->state.players; node; node = node->next) {
-        player = node->data;
-        if (player->id == ev->id) {
+        p = node->data;
+        if (p->id == ev->id) {
             break;
         }
     }
@@ -106,28 +142,27 @@ game_move_player(Game *g, Event *ev) {
     int key = *(int *) ev->data;
     switch (key) {
     case KEY_UP:
-        move_up(&g->state, player);
+        move_up(&g->state, p);
         break;
     case KEY_RIGHT:
-        move_right(&g->state, player);
+        move_right(&g->state, p);
         break;
     case KEY_DOWN:
-        move_down(&g->state, player);
+        move_down(&g->state, p);
         break;
     case KEY_LEFT:
-        move_left(&g->state, player);
+        move_left(&g->state, p);
         break;
     default:
-        LOG_DEBUG("move_player: Invalid key (key=%d)", key);
+        LOG_DEBUG("game_move_player: Invalid key (key=%d)", key);
         return;
     }
-    game_check_fruit_collision(g, player);
+    check_fruit_collision(g, p);
 }
 
 void
-game_set_game_state(Game *g, GameState *state) {
-    UNUSED(g);
-    UNUSED(state);
+game_set_state(Game *g, GameState *state) {
+    memcpy(&g->state, state, sizeof (GameState));
 }
 
 /* vim: set et sw=4 ts=4 tw=72: */

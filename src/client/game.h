@@ -29,11 +29,10 @@ typedef struct {
 Game *game_create(void);
 void game_add_fruit(Game *g, Event *ev);
 void game_add_player(Game *g, Event *ev);
-void game_check_fruit_collision(Game *g, Player *player);
 void game_del_fruit(Game *g, Event *ev);
 void game_del_player(Game *g, Event *ev);
 void game_move_player(Game *g, Event *ev);
-void game_set_game_state(Game *g, GameState *state);
+void game_set_state(Game *g, GameState *state);
 
 #endif
 

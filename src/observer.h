@@ -7,6 +7,9 @@
 
 typedef enum {
     ADD_FRUIT,
+    ADD_PLAYER,
+    DEL_FRUIT,
+    DEL_PLAYER,
     KEY_PRESS
 } EventType;
 
