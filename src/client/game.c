@@ -40,70 +40,70 @@ move_left(GameState *state, Player *player) {
 }
 
 Game *
-create_game(void) {
+game_create(void) {
     Game *g = calloc(1, sizeof (Game));
     srand(time(NULL));
     return g;
 }
 
 void
-add_fruit(Game *g, Command *cmd) {
-    Command _cmd;
+game_add_fruit(Game *g, Event *ev) {
+    Event _ev;
     Fruit *f = calloc(1, sizeof (Fruit));
-    if (cmd) {
-        f = cmd->data;
+    if (ev) {
+        f = ev->data;
     } else {
         f->id = rand();
         f->x = rand() % g->state.board.width;
         f->y = rand() % g->state.board.height;
     }
-    _cmd.type = CMD_ADD_FRUIT;
-    _cmd.data = f;
-    notify_all_observers(g->observers, &_cmd);
+    _ev.type = ADD_FRUIT;
+    _ev.data = f;
+    obs_notify_all(g->observers, &_ev);
     insert(&g->state.fruits, f);
 }
 
 void
-add_player(Game *g, Command *cmd) {
+game_add_player(Game *g, Event *ev) {
     UNUSED(g);
-    UNUSED(cmd);
+    UNUSED(ev);
 }
 
 void
-check_fruit_collision(Game *g, Player *player) {
+game_check_fruit_collision(Game *g, Player *player) {
     UNUSED(g);
     UNUSED(player);
 }
 
 void
-del_fruit(Game *g, Command *cmd) {
+game_del_fruit(Game *g, Event *ev) {
     UNUSED(g);
-    UNUSED(cmd);
+    UNUSED(ev);
 }
 
 void
-del_player(Game *g, Command *cmd) {
+game_del_player(Game *g, Event *ev) {
     UNUSED(g);
-    UNUSED(cmd);
+    UNUSED(ev);
 }
 
 void
-move_player(Game *g, Command *cmd) {
+game_move_player(Game *g, Event *ev) {
     UNUSED(g);
-    UNUSED(cmd);
+    UNUSED(ev);
     List *node = NULL;
     Player *player;
     for (node = g->state.players; node; node = node->next) {
         player = node->data;
-        if (player->id == cmd->id) {
+        if (player->id == ev->id) {
             break;
         }
     }
     if (!node) {
-        LOG_DEBUG("move_player: Player not found (id=%d)", cmd->id);
+        LOG_DEBUG("game_move_player: Player not found (id=%d)", ev->id);
         return;
     }
-    int key = *(int *) cmd->data;
+    int key = *(int *) ev->data;
     switch (key) {
     case KEY_UP:
         move_up(&g->state, player);
@@ -121,11 +121,11 @@ move_player(Game *g, Command *cmd) {
         LOG_DEBUG("move_player: Invalid key (key=%d)", key);
         return;
     }
-    check_fruit_collision(g, player);
+    game_check_fruit_collision(g, player);
 }
 
 void
-set_game_state(Game *g, GameState *state) {
+game_set_game_state(Game *g, GameState *state) {
     UNUSED(g);
     UNUSED(state);
 }

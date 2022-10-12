@@ -14,11 +14,10 @@ typedef struct {
     key_pressed_once_getter _getter;
 } KeyboardListener;
 
-KeyboardListener *create_keyboard_listener(
-        key_pressed_once_getter getter);
-void destroy_keyboard_listener(KeyboardListener *kl);
-void listen_keys_pressed_once(KeyboardListener *kl, size_t max_keys);
-void register_player_id(KeyboardListener *kl, uint32_t id);
+KeyboardListener *kl_create(key_pressed_once_getter getter);
+void kl_destroy(KeyboardListener *kl);
+void kl_listen_keys_pressed_once(KeyboardListener *kl, size_t max_keys);
+void kl_register_player_id(KeyboardListener *kl, uint32_t id);
 
 #endif
 

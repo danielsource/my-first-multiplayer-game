@@ -7,20 +7,20 @@
 #include "util.h"
 
 void
-print_foo(Command *cmd) {
-    UNUSED(cmd);
-    LOG_DEBUG("WORKING!!! id=%d type=%d data=%s", cmd->id, cmd->type,
-            (char *) cmd->data);
+print_foo(Event *ev) {
+    UNUSED(ev);
+    LOG_DEBUG("WORKING!!! id=%d type=%d data=%s", ev->id, ev->type,
+            (char *) ev->data);
 }
 
 int
 main(void) {
-    KeyboardListener *kl = create_keyboard_listener(GetKeyPressed);
     Observer o = {print_foo};
-    register_player_id(kl, 16);
-    subscribe_observer(&kl->observers, &o);
-    listen_keys_pressed_once(kl, 10);
-    destroy_keyboard_listener(kl);
+    KeyboardListener *kl = kl_create(GetKeyPressed);
+    kl_register_player_id(kl, 16);
+    obs_subscribe(&kl->observers, &o);
+    kl_listen_keys_pressed_once(kl, 10);
+    kl_destroy(kl);
     return 0;
 }
 

@@ -4,22 +4,22 @@
 #include "observer.h"
 
 void
-clear_observers(List *observers) {
+obs_unsubscribe_all(List *observers) {
     clear(observers, false);
 }
 
 void
-notify_all_observers(List *observers, Command *cmd) {
+obs_notify_all(List *observers, Event *ev) {
     List *o;
     Observer *observer;
     for (o = observers; o; o = o->next) {
         observer = o->data;
-        observer->func(cmd);
+        observer->update(ev);
     }
 }
 
 void
-subscribe_observer(List **observers, Observer *o) {
+obs_subscribe(List **observers, Observer *o) {
     insert(observers, o);
 }
 

@@ -26,14 +26,14 @@ typedef struct {
     ll_List *observers;
 } Game;
 
-Game *create_game(void);
-void add_fruit(Game *g, Command *cmd);
-void add_player(Game *g, Command *cmd);
-void check_fruit_collision(Game *g, Player *player);
-void del_fruit(Game *g, Command *cmd);
-void del_player(Game *g, Command *cmd);
-void move_player(Game *g, Command *cmd);
-void set_game_state(Game *g, GameState *state);
+Game *game_create(void);
+void game_add_fruit(Game *g, Event *ev);
+void game_add_player(Game *g, Event *ev);
+void game_check_fruit_collision(Game *g, Player *player);
+void game_del_fruit(Game *g, Event *ev);
+void game_del_player(Game *g, Event *ev);
+void game_move_player(Game *g, Event *ev);
+void game_set_game_state(Game *g, GameState *state);
 
 #endif
 
