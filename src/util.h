@@ -1,6 +1,8 @@
 #ifndef UTIL_INCLUDED
 #define UTIL_INCLUDED
 
+#include <stdio.h>
+
 #define LENGTH(x)            (sizeof (x) / sizeof (x)[0])
 #define UNUSED(x)            ((void)(x))
 
