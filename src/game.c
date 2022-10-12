@@ -124,9 +124,13 @@ game_del_player(Game *g, Event *ev) {
 }
 
 void
+game_destroy(Game *g) {
+    obs_unsubscribe_all(g->observers);
+    free(g);
+}
+
+void
 game_move_player(Game *g, Event *ev) {
-    UNUSED(g);
-    UNUSED(ev);
     List *node = NULL;
     Player *p;
     for (node = g->state.players; node; node = node->next) {

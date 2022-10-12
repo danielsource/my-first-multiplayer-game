@@ -14,7 +14,7 @@ obs_notify_all(List *observers, Event *ev) {
     Observer *observer;
     for (o = observers; o; o = o->next) {
         observer = o->data;
-        observer->update(ev);
+        observer->update(observer->impl, ev);
     }
 }
 

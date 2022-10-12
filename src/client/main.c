@@ -2,25 +2,35 @@
 
 #include "raylib.h"
 
+#include "game.h"
 #include "keyboard-listener.h"
 #include "observer.h"
-#include "util.h"
-
-void
-print_foo(Event *ev) {
-    UNUSED(ev);
-    LOG_DEBUG("WORKING!!! id=%d type=%d data=%s", ev->id, ev->type,
-            (char *) ev->data);
-}
+#include "render-screen.h"
 
 int
 main(void) {
-    Observer o = {print_foo};
+    uint32_t player_id = 0;
+    Game *g = game_create();
+    Observer o = {
+        g, (ObserverFunc) game_move_player
+    };
     KeyboardListener *kl = kl_create(GetKeyPressed);
-    kl_register_player_id(kl, 16);
+    kl_register_player_id(kl, player_id);
     obs_subscribe(&kl->observers, &o);
-    kl_listen_keys_pressed_once(kl, 10);
+
+    SetTraceLogLevel(LOG_WARNING);
+    InitWindow(400, 250,
+            "My first multiplayer game");
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose()) {
+        kl_listen_keys_pressed_once(kl, 10);
+        render_screen(&g->state, player_id);
+    }
+
+    CloseWindow();
     kl_destroy(kl);
+    game_destroy(g);
     return 0;
 }
 

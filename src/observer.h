@@ -18,8 +18,11 @@ typedef struct {
     void *data;
 } Event;
 
+typedef void (*ObserverFunc)(void *impl, Event *ev);
+
 typedef struct {
-    void (*update)(Event *ev);
+    void *impl;
+    ObserverFunc update;
 } Observer;
 
 void obs_unsubscribe_all(ll_List *observers);
