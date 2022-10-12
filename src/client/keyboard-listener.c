@@ -19,21 +19,18 @@ kl_destroy(KeyboardListener *kl) {
 
 void
 kl_listen_keys_pressed_once(KeyboardListener *kl, size_t max_keys) {
-    int *buf = calloc(max_keys+1, sizeof (int)), key;
+    int key;
     size_t i;
     Event ev = {
         .id = kl->_player_id,
         .type = KEY_PRESS,
-        .data = buf
+        .data = &key
     };
     for (i = 0; i < max_keys; i++) {
         if (!(key = kl->_getter()))
             break;
-        buf[i] = key;
-    }
-    if (buf[0])
         obs_notify_all(kl->observers, &ev);
-    free(buf);
+    }
 }
 
 void

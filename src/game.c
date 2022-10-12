@@ -51,6 +51,7 @@ check_fruit_collision(Game *g, Player *p) {
             LOG_DEBUG("check_fruit_collision: Collision between"
                     " p=%d and f=%d", p->id, f->id);
             ev.id = f->id;
+            ev.data = f;
             game_del_fruit(g, &ev);
         }
     }
@@ -131,6 +132,8 @@ game_destroy(Game *g) {
 
 void
 game_move_player(Game *g, Event *ev) {
+    if (ev->type != KEY_PRESS)
+        return;
     List *node = NULL;
     Player *p;
     for (node = g->state.players; node; node = node->next) {

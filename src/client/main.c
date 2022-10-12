@@ -6,10 +6,11 @@
 #include "keyboard-listener.h"
 #include "observer.h"
 #include "render-screen.h"
+#include "util.h"
 
-int
-main(void) {
-    uint32_t player_id = 0;
+void
+run(void) {
+    uint32_t player_id = 5;
     Game *g = game_create();
     Observer o = {
         g, (ObserverFunc) game_move_player
@@ -31,6 +32,13 @@ main(void) {
     CloseWindow();
     kl_destroy(kl);
     game_destroy(g);
+}
+
+int
+main(int argc, char **argv) {
+    if (argc != 2)
+        LOG_DIE("Usage: %s <server_address>", argv[0]);
+    run();
     return 0;
 }
 
